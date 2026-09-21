@@ -80,7 +80,28 @@ Do not generate large documentation files unless requested.
 Before installing a package, check whether the existing stack can solve the requirement.
 
 ## Current Stage
+## Current Stage
 
-The project is currently being initialized.
+Stage 1 — Landing Page & Application Shell
 
-Do not build application features until explicitly instructed.
+Focus only on:
+- TruthLens branding
+- Landing page
+- Basic navigation/header
+- Primary CTA
+- Responsive layout
+- Initial visual design system
+
+Do not implement:
+- SerpApi integration
+- Search functionality
+- Investigation pipeline
+- Evidence extraction
+- LLM integration
+- Database
+- Authentication
+- Future-stage functionality
+
+Use the existing Next.js, TypeScript, Tailwind CSS, and ESLint setup.
+
+Do not install new packages unless absolutely required.
