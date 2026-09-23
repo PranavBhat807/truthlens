@@ -1,4 +1,69 @@
+'use client';
+
+import { useState } from 'react';
+
+interface SearchResult {
+  title: string;
+  url: string;
+  snippet: string;
+  source: string;
+}
+
+interface SearchApiResponse {
+  query?: string;
+  count?: number;
+  results?: SearchResult[];
+  error?: string;
+}
+
 export default function Home() {
+  const [query, setQuery] = useState('Did scientists discover a new room-temperature superconductor in 2026?');
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [results, setResults] = useState<SearchResult[] | null>(null);
+  const [lastSearchedQuery, setLastSearchedQuery] = useState<string | null>(null);
+
+  const handleSearch = async (searchQuery?: string) => {
+    const targetQuery = (searchQuery !== undefined ? searchQuery : query).trim();
+
+    if (!targetQuery) {
+      setError('Please enter a claim or question to investigate.');
+      return;
+    }
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(`/api/search?q=${encodeURIComponent(targetQuery)}`);
+      const data = (await response.json()) as SearchApiResponse;
+
+      if (!response.ok) {
+        throw new Error(data.error || `Search failed with status ${response.status}`);
+      }
+
+      setResults(data.results || []);
+      setLastSearchedQuery(targetQuery);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'An unexpected error occurred while searching.';
+      setError(message);
+      setResults(null);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !isLoading) {
+      handleSearch();
+    }
+  };
+
+  const handleSampleClick = (sampleText: string) => {
+    setQuery(sampleText);
+    handleSearch(sampleText);
+  };
+
   return (
     <div className="flex min-h-screen flex-col bg-zinc-950 text-zinc-100">
       {/* Navigation Header */}
@@ -83,9 +148,9 @@ export default function Home() {
 
           <div className="mx-auto max-w-4xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/80 px-3 py-1 text-xs font-medium text-zinc-300 backdrop-blur-sm">
-              <span className="text-cyan-400 font-semibold">Stage 1</span>
+              <span className="text-cyan-400 font-semibold">Stage 2</span>
               <span className="text-zinc-600">•</span>
-              <span>SerpApi-Powered Investigation Engine</span>
+              <span>Live SerpApi Search Integration</span>
             </div>
 
             <h1 className="mt-6 text-4xl font-extrabold tracking-tight text-white sm:text-5xl lg:text-6xl">
@@ -101,10 +166,10 @@ export default function Home() {
               a structured, verified investigation dossier.
             </p>
 
-            {/* Primary Investigation Input Mock / CTA */}
+            {/* Primary Investigation Input */}
             <div
               id="investigate"
-              className="mx-auto mt-10 max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-900/90 p-2 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm sm:p-3"
+              className="mx-auto mt-10 max-w-2xl rounded-2xl border border-zinc-800 bg-zinc-900/90 p-2 shadow-2xl shadow-cyan-950/20 backdrop-blur-sm sm:p-3 text-left"
             >
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                 <div className="relative flex-1">
@@ -122,44 +187,205 @@ export default function Home() {
                   </div>
                   <input
                     type="text"
-                    readOnly
-                    defaultValue="Did scientists discover a new room-temperature superconductor in 2026?"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isLoading}
                     placeholder="Enter a claim or question to investigate..."
-                    className="w-full rounded-xl border-0 bg-zinc-950/60 py-3.5 pr-4 pl-11 text-sm text-zinc-200 placeholder:text-zinc-500 focus:ring-1 focus:ring-cyan-500 cursor-default"
+                    className="w-full rounded-xl border border-transparent bg-zinc-950/60 py-3.5 pr-4 pl-11 text-sm text-zinc-100 placeholder:text-zinc-500 focus:border-cyan-500/50 focus:bg-zinc-950/90 focus:outline-none focus:ring-1 focus:ring-cyan-500 disabled:opacity-60"
                   />
                 </div>
                 <button
                   type="button"
-                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3.5 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-400 active:scale-[0.98]"
+                  onClick={() => handleSearch()}
+                  disabled={isLoading}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl bg-cyan-500 px-5 py-3.5 text-sm font-semibold text-zinc-950 transition hover:bg-cyan-400 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60"
                 >
-                  <span>Investigate Claim</span>
-                  <svg
-                    className="h-4 w-4"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2.5"
-                  >
-                    <path d="M5 12h14" />
-                    <path d="m12 5 7 7-7 7" />
-                  </svg>
+                  {isLoading ? (
+                    <>
+                      <svg
+                        className="h-4 w-4 animate-spin text-zinc-950"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        />
+                        <path
+                          className="opacity-75"
+                          fill="currentColor"
+                          d="M4 12a8 8 0 018-8v8H4z"
+                        />
+                      </svg>
+                      <span>Searching...</span>
+                    </>
+                  ) : (
+                    <>
+                      <span>Investigate Claim</span>
+                      <svg
+                        className="h-4 w-4"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path d="M5 12h14" />
+                        <path d="m12 5 7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               </div>
 
               {/* Sample Prompt Pills */}
               <div className="mt-3 flex flex-wrap items-center gap-2 px-1 text-xs text-zinc-400">
                 <span className="text-zinc-500">Sample claims:</span>
-                <span className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-zinc-300">
+                <button
+                  type="button"
+                  onClick={() => handleSampleClick('Mars cave water evidence')}
+                  disabled={isLoading}
+                  className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-zinc-300 transition hover:border-cyan-500/40 hover:bg-zinc-800/60 hover:text-white"
+                >
                   Mars cave water evidence
-                </span>
-                <span className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-zinc-300">
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSampleClick('EU AI Act enforcement timeline')}
+                  disabled={isLoading}
+                  className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-zinc-300 transition hover:border-cyan-500/40 hover:bg-zinc-800/60 hover:text-white"
+                >
                   EU AI Act enforcement timeline
-                </span>
-                <span className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-zinc-300">
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSampleClick('Quantum advantage benchmark')}
+                  disabled={isLoading}
+                  className="rounded-md border border-zinc-800 bg-zinc-950/40 px-2.5 py-1 text-zinc-300 transition hover:border-cyan-500/40 hover:bg-zinc-800/60 hover:text-white"
+                >
                   Quantum advantage benchmark
-                </span>
+                </button>
               </div>
             </div>
+
+            {/* Error Message */}
+            {error && (
+              <div className="mx-auto mt-6 max-w-2xl rounded-xl border border-red-500/30 bg-red-950/30 p-4 text-left backdrop-blur-sm">
+                <div className="flex items-start gap-3">
+                  <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-500/20 text-red-400">
+                    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <line x1="18" y1="6" x2="6" y2="18" />
+                      <line x1="6" y1="6" x2="18" y2="18" />
+                    </svg>
+                  </div>
+                  <div className="flex-1">
+                    <h4 className="text-xs font-semibold uppercase tracking-wider text-red-300">Search Error</h4>
+                    <p className="mt-1 text-xs text-red-200/90 leading-relaxed">{error}</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Search Results Display */}
+            {results !== null && !isLoading && (
+              <div className="mx-auto mt-8 max-w-3xl text-left">
+                <div className="mb-4 flex items-center justify-between border-b border-zinc-800 pb-3">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-semibold uppercase tracking-wider text-cyan-400">
+                      Search Results
+                    </span>
+                    <span className="rounded-full bg-zinc-800 px-2 py-0.5 text-[11px] font-mono text-zinc-300">
+                      {results.length} {results.length === 1 ? 'source' : 'sources'}
+                    </span>
+                  </div>
+                  {lastSearchedQuery && (
+                    <span className="text-xs text-zinc-500 truncate max-w-xs sm:max-w-md">
+                      Query: <span className="text-zinc-400">&ldquo;{lastSearchedQuery}&rdquo;</span>
+                    </span>
+                  )}
+                </div>
+
+                {results.length === 0 ? (
+                  <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-8 text-center backdrop-blur-sm">
+                    <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-full bg-zinc-800 text-zinc-400">
+                      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <path d="m21 21-4.3-4.3" />
+                      </svg>
+                    </div>
+                    <h3 className="mt-3 text-sm font-semibold text-zinc-200">No results found</h3>
+                    <p className="mt-1 text-xs text-zinc-400">
+                      No matching web evidence returned for this query. Try rephrasing or searching for related keywords.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {results.map((result, idx) => (
+                      <article
+                        key={`${result.url}-${idx}`}
+                        className="rounded-xl border border-zinc-800/90 bg-zinc-900/60 p-4 transition hover:border-zinc-700 hover:bg-zinc-900/90 backdrop-blur-sm"
+                      >
+                        <div className="flex items-center justify-between gap-2 text-xs">
+                          <span className="inline-flex items-center gap-1.5 font-medium text-cyan-400">
+                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-cyan-400" />
+                            {result.source || 'Web Source'}
+                          </span>
+                          {result.url && (
+                            <a
+                              href={result.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-cyan-300 transition-colors"
+                            >
+                              <span className="max-w-[200px] truncate sm:max-w-[280px]">
+                                {result.url}
+                              </span>
+                              <svg
+                                className="h-3 w-3 shrink-0"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                                <polyline points="15 3 21 3 21 9" />
+                                <line x1="10" y1="14" x2="21" y2="3" />
+                              </svg>
+                            </a>
+                          )}
+                        </div>
+
+                        <h3 className="mt-2 text-sm font-semibold text-zinc-100">
+                          {result.url ? (
+                            <a
+                              href={result.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="hover:text-cyan-300 hover:underline transition-colors"
+                            >
+                              {result.title || 'Untitled Document'}
+                            </a>
+                          ) : (
+                            result.title || 'Untitled Document'
+                          )}
+                        </h3>
+
+                        {result.snippet && (
+                          <p className="mt-2 text-xs leading-relaxed text-zinc-400">
+                            {result.snippet}
+                          </p>
+                        )}
+                      </article>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
@@ -291,7 +517,7 @@ export default function Home() {
             <span>—</span>
             <span>SerpApi-Powered Investigation Engine</span>
           </div>
-          <p>© 2026 TruthLens. Stage 1 MVP Shell.</p>
+          <p>© 2026 TruthLens. Stage 2 UI Search Integration.</p>
         </div>
       </footer>
     </div>

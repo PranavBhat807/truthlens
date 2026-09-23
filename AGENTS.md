@@ -80,28 +80,21 @@ Do not generate large documentation files unless requested.
 Before installing a package, check whether the existing stack can solve the requirement.
 
 ## Current Stage
-## Current Stage
 
-Stage 1 — Landing Page & Application Shell
+Stage 2 — SerpApi Integration
 
 Focus only on:
-- TruthLens branding
-- Landing page
-- Basic navigation/header
-- Primary CTA
-- Responsive layout
-- Initial visual design system
+- Server-side SerpApi configuration
+- Secure API key handling
+- Minimal search API wrapper
+- Basic search result normalization
+- Design the wrapper so additional SerpApi engines can be added later without rewriting the core integration
 
 Do not implement:
-- SerpApi integration
-- Search functionality
 - Investigation pipeline
-- Evidence extraction
-- LLM integration
-- Database
+- Claim extraction
+- Contradiction detection
+- Evidence graph
+- LLM synthesis
 - Authentication
-- Future-stage functionality
-
-Use the existing Next.js, TypeScript, Tailwind CSS, and ESLint setup.
-
-Do not install new packages unless absolutely required.
+- Database
