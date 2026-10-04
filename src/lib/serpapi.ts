@@ -131,6 +131,9 @@ export async function searchGoogle(
   const response = await fetchSerpApi(
     {
       q: query,
+      location: 'India',
+      gl: 'in',
+      hl: 'en',
       ...extraParams,
     },
     'google'
