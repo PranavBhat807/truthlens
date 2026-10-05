@@ -85,132 +85,39 @@ Before installing a package, check whether the existing stack can solve the requ
 
 ## Current Stage
 
-Stage 5 — Investigation Report
+## Current Stage
+
+Stage 6 — Evidence Graph
 
 Focus only on:
-
-- Taking the structured evidence analysis produced by Stage 4.
-- Turning the analyzed evidence into a clear investigation report.
-- Presenting the investigation question.
-- Presenting the overall evidence state:
+- Visualizing the relationships between the investigation question, extracted claims, and sources
+- Using the structured evidence produced by Stage 4
+- Showing supports, contradicts, and neutral relationships
+- Showing evidence states:
   - Supported
   - Conflicting
   - Unverified
   - Insufficient Evidence
-- Presenting the important claims found during the investigation.
-- Showing which sources support, contradict, or are neutral toward each claim.
-- Showing source title, URL, source type, and relevant evidence/snippet.
-- Clearly separating:
-  - evidence
-  - analysis
-  - conclusion
-- Providing a concise final conclusion based only on the collected evidence.
-- Preserving uncertainty when the evidence is insufficient or conflicting.
-- Making the report traceable back to the original sources.
-- Handling cases where there are no claims or insufficient evidence.
-- Handling API errors and malformed input gracefully.
+- Making source-to-claim relationships traceable
+- Keeping the graph understandable for a hackathon demonstration
+- Reusing existing Stage 4 data structures
 
-Use the existing Stage 3 investigation pipeline and Stage 4 evidence analysis.
+The graph must represent actual collected evidence only.
 
-Do not perform additional SerpApi searches in this stage.
+Do not invent claims, sources, relationships, or evidence.
 
-Do not create new search queries in this stage.
+Do not perform additional SerpApi searches.
 
-Do not invent sources, claims, facts, URLs, or evidence.
+Do not add an LLM.
 
-Do not treat search-result snippets as absolute proof.
-
-Do not claim a statement is definitely true or false unless the Stage 4 evidence supports that conclusion.
-
-If sources disagree, clearly show the disagreement instead of hiding it.
-
-If evidence is insufficient, say so instead of generating a confident conclusion.
-
-LLM usage is allowed only if it is actually needed to produce a concise evidence-based synthesis. Prefer existing project configuration and native HTTP requests. Do not add an SDK/package unless absolutely required.
-
-The report should remain useful even if LLM synthesis is unavailable. A deterministic fallback based on Stage 4 evidence should exist.
+Do not add packages unless absolutely required.
 
 Do not implement:
-
-- Evidence graph visualization
-- Advanced SerpApi engine selection
-- Additional SerpApi searches
+- Advanced SerpApi search optimization
 - Authentication
 - Database
 - Payments
 - User accounts
 - Future-stage features
 
-## Stage 5 Architecture
-
-Use this flow:
-
-User question
-→ Stage 3 investigation
-→ Stage 4 evidence analysis
-→ Stage 5 investigation report
-
-Stage 5 should consume existing structured Stage 4 output rather than independently repeating earlier processing.
-
-Prefer a reusable report-generation function in:
-
-src/lib/report.ts
-
-and an API endpoint in:
-
-src/app/api/report/route.ts
-
-Only create these files if they do not already exist.
-
-The existing page should be updated only as necessary to display the Stage 5 report.
-
-## Report Structure
-
-The report should contain, at minimum:
-
-1. Question
-2. Overall evidence state
-3. Short conclusion
-4. Key findings
-5. Evidence breakdown
-6. Sources
-
-Each important finding should remain traceable to one or more source URLs.
-
-For conflicting evidence, show both sides and identify the relevant sources.
-
-For insufficient evidence, explicitly state that the available evidence does not support a reliable conclusion.
-
-## UI Rules
-
-Keep the existing TruthLens visual style.
-
-Do not redesign the entire application.
-
-Prefer clear sections/cards over a large amount of text.
-
-The user should be able to quickly understand:
-
-- What was investigated
-- What the evidence indicates
-- Whether sources agree or disagree
-- Where the evidence came from
-
-Do not add unnecessary animations, libraries, pages, or components.
-
-## Validation
-
-After implementation:
-
-- Run npm run lint
-- Run npx tsc --noEmit
-- Run npm run build
-
-If possible, manually verify:
-
-1. A question with supporting evidence.
-2. A question with conflicting evidence.
-3. A question with insufficient/unverified evidence.
-4. A malformed or empty request.
-
-Stop after Stage 5.
+Keep the implementation simple and compatible with the existing Stage 4 and Stage 5 architecture.

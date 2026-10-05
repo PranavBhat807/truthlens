@@ -901,51 +901,100 @@ function classifyPropositionStance(
   claimText: string,
   question: string
 ): { relationship: ClaimRelationship; confidence: number; reasoning: string } {
-  const combinedText = claimText.toLowerCase();
+  const trimmedClaim = claimText.trim();
+  const lowerClaim = trimmedClaim.toLowerCase();
   const lowerQ = question.toLowerCase();
-
-  let contradictScore = 0;
-  let supportScore = 0;
-  let neutralScore = 0;
-
-  for (const pattern of CONTRADICTING_PATTERNS) {
-    if (pattern.test(combinedText)) contradictScore += 2;
-  }
-  for (const pattern of SUPPORTING_PATTERNS) {
-    if (pattern.test(combinedText)) supportScore += 2;
-  }
-  for (const pattern of NEUTRAL_PATTERNS) {
-    if (pattern.test(combinedText)) neutralScore += 2;
-  }
-
   const isHarmQuestion = /\b(harm|harms|dangerous|risk|fake|hoax|false|myth)\b/i.test(lowerQ);
 
-  if (neutralScore > supportScore && neutralScore > contradictScore) {
+  console.log(`[TL-DEBUG][PROP] Sentence: "${trimmedClaim.substring(0, 120)}"`);
+
+  // RULE 1 — Question detection (highest priority)
+  const isQuestionStart = /^(?:is|are|was|were|do|does|did|has|have|had|can|could|will|would|should|may|might|who|what|when|where|which|how|why)\b/i.test(
+    trimmedClaim
+  );
+  if (trimmedClaim.endsWith('?') || isQuestionStart) {
+    console.log('[TL-DEBUG][PROP] Rule 1 (Question detection) fired → neutral');
     return {
       relationship: 'neutral',
-      confidence: 0.75,
-      reasoning: 'Evidence indicates mixed, conditional, or inconclusive outcomes.',
+      confidence: 0.5,
+      reasoning: 'Source poses a question rather than asserting a claim.',
     };
   }
 
-  if (contradictScore > supportScore) {
+  // RULE 2 — Explicit negation detection (contradicts)
+  const explicitNegationRegex = /\b(?:did\s+not|does\s+not|has\s+not|have\s+not|was\s+not|were\s+not|no\s+evidence|no\s+proof|lacks\s+evidence|not\s+supported|debunked|disproven|disproved|refuted|false|hoax|fabricated|unfounded|unsubstantiated|myth)\b/i;
+  if (explicitNegationRegex.test(lowerClaim)) {
+    console.log('[TL-DEBUG][PROP] Rule 2 (Explicit negation) fired → contradicts');
     return {
       relationship: 'contradicts',
-      confidence: Math.min(0.95, 0.6 + contradictScore * 0.1),
-      reasoning: isHarmQuestion
-        ? 'Presents findings confirming negative effects or disputing efficacy.'
-        : 'Presents counter-evidence, skepticism, debunking, or negative outcomes.',
+      confidence: 0.85,
+      reasoning: 'Source explicitly denies or refutes the proposition.',
     };
   }
 
-  if (supportScore > contradictScore) {
+  // RULE 3 — Hedged attribution (neutral)
+  const hedgedAttributionRegex = /\b(?:reportedly|allegedly|purportedly|claims|claimed|claim\s+to|claims\s+to|claimed\s+to|suggests|suggested|may|might|could|possibly|perhaps|appears\s+to|seems\s+to|unconfirmed|unverified|preliminary)\b/i;
+  const isHedged = hedgedAttributionRegex.test(lowerClaim);
+  if (isHedged) {
+    console.log('[TL-DEBUG][PROP] Rule 3 (Hedged attribution) fired → neutral');
+    return {
+      relationship: 'neutral',
+      confidence: 0.6,
+      reasoning: 'Source attributes the claim to a third party or hedges the assertion.',
+    };
+  }
+
+  // RULE 4 — Direct positive assertion (supports)
+  const directPositiveRegex = /\b(?:confirmed|confirms|confirmed\s+that|demonstrates|demonstrated|discovered|achieves|achieved|has\s+achieved|has\s+demonstrated|proven|proves|validated|verified|established\s+that)\b/i;
+  if (directPositiveRegex.test(lowerClaim) && !isHedged) {
+    console.log('[TL-DEBUG][PROP] Rule 4 (Direct positive assertion) fired → supports');
     return {
       relationship: 'supports',
-      confidence: Math.min(0.95, 0.6 + supportScore * 0.1),
-      reasoning: 'Presents affirmative evidence, corroboration, or positive findings.',
+      confidence: 0.85,
+      reasoning: 'Source contains a direct positive assertion of the proposition.',
     };
   }
 
+  // RULE 5 — Explicit contradiction patterns (contradicts)
+  for (const pattern of CONTRADICTING_PATTERNS) {
+    if (pattern.test(lowerClaim)) {
+      console.log('[TL-DEBUG][PROP] Rule 5 (Fallback contradiction patterns) fired → contradicts');
+      return {
+        relationship: 'contradicts',
+        confidence: 0.75,
+        reasoning: isHarmQuestion
+          ? 'Presents findings confirming negative effects or disputing efficacy.'
+          : 'Presents counter-evidence, skepticism, debunking, or negative outcomes.',
+      };
+    }
+  }
+
+  // RULE 6 — Existing supporting patterns (supports)
+  for (const pattern of SUPPORTING_PATTERNS) {
+    if (pattern.test(lowerClaim)) {
+      console.log('[TL-DEBUG][PROP] Rule 6 (Fallback supporting patterns) fired → supports');
+      return {
+        relationship: 'supports',
+        confidence: 0.7,
+        reasoning: 'Presents affirmative evidence, corroboration, or positive findings.',
+      };
+    }
+  }
+
+  // RULE 7 — Existing neutral patterns (neutral)
+  for (const pattern of NEUTRAL_PATTERNS) {
+    if (pattern.test(lowerClaim)) {
+      console.log('[TL-DEBUG][PROP] Rule 7 (Fallback neutral patterns) fired → neutral');
+      return {
+        relationship: 'neutral',
+        confidence: 0.75,
+        reasoning: 'Evidence indicates mixed, conditional, or inconclusive outcomes.',
+      };
+    }
+  }
+
+  // RULE 8 — Default
+  console.log('[TL-DEBUG][PROP] Rule 8 (Default) fired → neutral');
   return {
     relationship: 'neutral',
     confidence: 0.5,

@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import type { ExtractedClaim, EvidenceAnalysisResult, EvidenceState } from '@/lib/evidence';
 import type { FinalInvestigationReport, KeyFinding, ReportSourceItem } from '@/lib/report';
+import { EvidenceGraph } from '@/components/evidence/EvidenceGraph';
 
 interface PlannedQuery {
   query: string;
@@ -282,7 +283,7 @@ export default function Home() {
                 Truth<span className="text-cyan-400">Lens</span>
               </span>
               <span className="rounded border border-cyan-500/30 bg-cyan-500/10 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-cyan-300">
-                v0.5 • Stage 5
+                v0.6 • Stage 6
               </span>
             </div>
           </div>
@@ -295,13 +296,23 @@ export default function Home() {
               Overview
             </a>
             {finalReport && (
+              <a
+                href="#final-report"
+                className="text-sm font-medium text-cyan-400 transition-colors hover:text-cyan-300"
+              >
+                Investigation Report
+              </a>
+            )}
+            {analysis && (
+              <a
+                href="#evidence-graph"
+                className="text-sm font-medium text-emerald-400 transition-colors hover:text-emerald-300"
+              >
+                Evidence Graph
+              </a>
+            )}
+            {finalReport && (
               <>
-                <a
-                  href="#final-report"
-                  className="text-sm font-medium text-cyan-400 transition-colors hover:text-cyan-300"
-                >
-                  Investigation Report
-                </a>
                 <a
                   href="#key-findings"
                   className="text-sm font-medium text-zinc-400 transition-colors hover:text-zinc-200"
@@ -924,6 +935,13 @@ export default function Home() {
                     })}
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* STAGE 6: EVIDENCE GRAPH */}
+            {analysis !== null && !isLoading && !isAnalyzing && !isGeneratingReport && (
+              <div className="mx-auto mt-10 max-w-4xl text-left">
+                <EvidenceGraph analysis={analysis} finalReport={finalReport} />
               </div>
             )}
 
