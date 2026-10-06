@@ -85,39 +85,43 @@ Before installing a package, check whether the existing stack can solve the requ
 
 ## Current Stage
 
-## Current Stage
-
-Stage 6 — Evidence Graph
+Stage 7 — Intelligent SerpApi Usage
 
 Focus only on:
-- Visualizing the relationships between the investigation question, extracted claims, and sources
-- Using the structured evidence produced by Stage 4
-- Showing supports, contradicts, and neutral relationships
-- Showing evidence states:
-  - Supported
-  - Conflicting
-  - Unverified
-  - Insufficient Evidence
-- Making source-to-claim relationships traceable
-- Keeping the graph understandable for a hackathon demonstration
-- Reusing existing Stage 4 data structures
+- Improving the Stage 3 investigation planner so search queries are selected intelligently
+- Choosing the most useful search angles based on the user's question
+- Avoiding unnecessary SerpApi requests
+- Reusing existing search infrastructure and investigation results
+- Keeping investigations within the existing 2–4 targeted search range
+- Supporting different question types such as:
+  - factual / identity questions
+  - yes/no propositions
+  - comparison questions
+  - current-status questions
+  - research/evidence questions
+- Prefer authoritative or high-quality sources when the question requires them
+- Avoiding duplicate or semantically redundant search queries
+- Preserving the existing Stage 4 evidence analysis and Stage 5 report pipeline
 
-The graph must represent actual collected evidence only.
+The strategy must return actual search queries that can be sent to the existing SerpApi integration.
 
-Do not invent claims, sources, relationships, or evidence.
+Do not invent search results.
 
-Do not perform additional SerpApi searches.
+Do not perform searches inside the strategy itself.
 
-Do not add an LLM.
+Do not add an LLM for query planning.
 
 Do not add packages unless absolutely required.
 
-Do not implement:
-- Advanced SerpApi search optimization
+Do not modify:
+- Stage 4 evidence extraction/classification logic
+- Stage 5 report generation
+- Stage 6 evidence graph
 - Authentication
 - Database
 - Payments
 - User accounts
-- Future-stage features
 
-Keep the implementation simple and compatible with the existing Stage 4 and Stage 5 architecture.
+Keep the implementation simple and suitable for a hackathon MVP.
+
+The existing 2–4 search limit should remain the default.
